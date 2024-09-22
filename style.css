@@ -1,0 +1,224 @@
+/* 색깔 참고 - 네이버 치지직 다크모드*/
+*{
+    padding: 0px;
+    margin: 0px;
+}
+
+body,html{
+    /*이거 없이는 요소들 크기 % 가 안됨*/
+    width: 100%;
+    height: 100%;
+    display: flex;
+    background-color: #141517;
+}
+
+a{
+    text-decoration: none;
+    color : #FFFFFF;
+}
+
+::-webkit-scrollbar{
+    width:7px;
+}
+::-webkit-scrollbar-thumb{
+    /*스크롤바 뒷배경*/
+    content:"";
+    background-color: #707070;
+    border-radius: 5px;
+}
+/*=================================================================*/
+/* menu 영역 */
+.thumbimg{
+    border-radius: 10px;
+    box-sizing: border-box;
+    border:5px solid #00000000;
+}
+.thumbimg_on{
+    border:5px solid #00ffa3cc;
+}
+
+.thumbimg:hover{
+    border:5px solid #00aeffcc;
+    border-radius: 10px;
+    box-sizing: border-box;
+}
+
+.button_board{
+    background-color: #00000000;
+    border: none;
+    border-radius: 10px;
+    margin-bottom: 5px;
+}
+.div_scroll{
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+#div_menu{
+    position: relative;
+    width: 75px;
+    display: flex;
+    flex-direction: column;
+}
+#div_board_list{
+    height: 100%;
+}
+#div_setting{
+    width: 100%;
+    height: 60px;
+}
+#button_set{
+    width:100%;
+    height:100%;
+    border:none;
+    background-color: transparent;
+
+    svg{
+        width: 60%;
+        height: 60%;
+        fill:#697183;
+    }
+}
+#button_set:hover{
+    svg{
+        fill:#FFFFFF;
+    }
+}
+/*=================================================================*/
+/* main 영역 */
+#div_frame{
+    display: flex;
+    flex-direction: column;
+    width:100%;
+    position: relative;
+}
+#div_main{
+    height: 100%;
+}
+/*----------------------------*/
+#table_post{
+    width:100%;
+    border-collapse: collapse;
+}
+#table_post tr{
+    border-bottom: 1px solid;
+    color:#697183;
+}
+#table_post tbody tr:hover{
+    background-color: #697183;
+}
+#table_post td{
+    padding-top: 5px;
+    padding-bottom: 5px;
+    color:#c9cedc;
+}
+#table_author{
+    width:120px;
+}
+#table_date{
+    width:100px;
+}
+/*=================================================================*/
+/* etc 영역 */
+#div_etc{
+    display: flex;
+    justify-content: center;
+    color:#9da5b6;
+    height:80px;
+    margin-top: 10px;
+}
+#div_page_num{
+    width: 600px;
+    justify-content: space-between;/*설정된 너비안에서 아이템 사이를 알아서 조절*/
+    display: flex;
+    margin: 0 auto;
+}
+.button_page{
+    width: 26px;
+    height: 26px;
+    border:none;
+}
+.button_page_on{
+    background-color: #00ffa3cc;
+}
+.button_page:hover{
+    background-color: #00aeffcc;
+}
+#previous{
+    width:54px;
+    height: 26px;
+}
+#next{
+    width: 54px;
+    height: 26px;
+}
+
+#div_board_title, #div_brand_name{
+    flex:1;
+    p{
+        width: fit-content;
+        margin: 0 auto;
+    }
+}
+
+/*=================================================================*/
+/* 설정 영역 */
+#div_set_frame{
+    width: 100%;
+    height: 100%;
+    position:absolute;
+    background-color: #141517;
+    display: none;
+}
+
+#div_add_item{
+    display: flex;
+    height: 30%;
+    position: relative;
+}
+
+#table_add{
+    margin:0 auto;
+    width:700px;
+    
+    input{
+        width:500px;
+    }
+
+    td{
+        color:#c9cedc;
+    }
+}
+
+#button_add{
+    height: 35px;
+    width: 70px;
+    border-radius: 5px;
+    border:none;
+    background-color: #00ffa3cc;
+    position: absolute;
+    bottom:30px;
+    right:100px;
+}
+
+#div_item_list{
+    height:70%;
+
+    > div{
+        width: 700px;
+        height: 100%;
+        margin: 0 auto;
+    }
+
+    p{
+        color:#c9cedc;
+    }
+}
+
+#div_list_frame{
+    overflow-y:scroll;
+
+    > div{
+        margin-bottom:20px;
+    }
+}

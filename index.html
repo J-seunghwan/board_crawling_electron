@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="./style.css?after">
+    <script defer src="./renderer.js"></script>
+</head>
+<body>
+    <div id="div_menu">
+        <div class="div_scroll" id="div_board_list">
+            <!--동적으로 button > img 생성-->
+            <!-- button class="button_board" id="btn_순서"-->
+            <!-- img ~~ -->
+        </div>
+        <div id="div_setting">
+            <button id="button_set">
+                <!--<img src="./setting-gear.svg">-->
+                <svg version="1.0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100.000000 100.000000" preserveAspectRatio="xMidYMid meet">
+                    <g transform="translate(0.000000,100.000000) scale(0.100000,-0.100000)" stroke="none">
+                        <path d="M427 946 c-3 -7 -8 -33 -12 -58 -6 -41 -9 -45 -53 -60 l-46 -17 -40 30 c-22 16 -45 29 -52 29 -11 0 -94 -84 -94 -95 0 -4 13 -26 30 -50 l30 -44 -19 -44 c-17 -39 -24 -45 -58 -51 -75 -14 -73 -11 -73 -86 0 -75 -2 -73 75 -85 37 -5 42 -10 57 -52 l17 -47 -30 -40 c-16 -22 -29 -45 -29 -52 0 -11 84 -94 95 -94 4 0 26 13 50 30 l44 30 44 -19 c39 -17 45 -24 51 -58 14 -75 11 -73 86 -73 75 0 73 -2 85 75 5 37 10 42 52 57 l46 17 43 -30 c23 -16 45 -29 49 -29 11 0 95 83 95 94 0 7 -13 30 -29 52 l-30 40 17 47 c15 42 20 47 57 52 77 12 75 10 75 85 0 75 0 74 -72 85 -41 6 -45 9 -60 52 l-17 46 30 44 c23 33 28 47 20 62 -12 21 -78 81 -89 81 -5 0 -26 -13 -48 -29 l-40 -30 -47 17 c-42 15 -47 20 -52 57 -12 77 -10 75 -85 75 -48 0 -69 -4 -73 -14z m120 -77 c8 -50 8 -50 68 -75 33 -13 63 -24 68 -24 4 0 26 12 48 27 l40 26 26 -26 26 -26 -26 -38 c-15 -22 -27 -43 -27 -49 0 -5 11 -36 24 -69 25 -60 25 -60 75 -68 51 -9 51 -9 51 -47 0 -38 0 -38 -51 -47 -50 -8 -50 -8 -75 -68 -13 -33 -24 -63 -24 -68 0 -4 12 -26 27 -48 l26 -40 -26 -26 -26 -26 -38 26 c-22 15 -43 27 -49 27 -5 0 -36 -11 -69 -24 -60 -25 -60 -25 -68 -75 l-9 -51 -38 0 c-38 0 -39 1 -45 43 -4 24 -10 48 -13 53 -7 10 -111 54 -127 54 -5 0 -26 -12 -48 -27 l-38 -26 -26 26 -26 26 26 40 c15 22 27 44 27 48 0 5 -11 35 -24 68 -25 60 -25 60 -75 68 l-51 9 0 38 c0 38 1 39 43 45 24 4 48 10 53 13 10 7 54 111 54 127 0 5 -12 26 -27 48 l-26 38 26 26 26 26 40 -26 c22 -15 44 -27 48 -27 5 0 35 11 68 24 60 25 60 25 68 75 9 51 9 51 47 51 38 0 38 0 47 -51z"/>
+                        <path d="M420 727 c-49 -16 -133 -102 -148 -153 -28 -94 -8 -169 63 -239 70 -71 145 -91 239 -63 55 16 138 99 154 154 26 89 9 163 -55 234 -65 72 -158 97 -253 67z m190 -61 c59 -39 85 -89 85 -166 0 -78 -26 -127 -88 -168 -56 -37 -153 -39 -210 -3 -76 47 -111 140 -88 229 14 51 75 117 123 131 53 16 135 6 178 -23z"/>
+                        <path d="M455 611 c-45 -20 -70 -60 -70 -112 0 -42 5 -53 33 -81 28 -28 39 -33 82 -33 43 0 54 5 82 33 28 28 33 39 33 82 0 42 -5 54 -31 81 -33 33 -92 46 -129 30z m100 -56 c16 -15 25 -36 25 -55 0 -19 -9 -40 -25 -55 -15 -16 -36 -25 -55 -25 -19 0 -40 9 -55 25 -16 15 -25 36 -25 55 0 19 9 40 25 55 15 16 36 25 55 25 19 0 40 -9 55 -25z"/>
+                    </g>
+                </svg>
+            </button>
+        </div>
+    </div>
+    <div id="div_frame">
+        <div id="div_set_frame">
+            <div id="div_add_item">
+                <table id="table_add">
+                    <tbody>
+                        <tr>
+                            <td>이름</td>
+                            <td><input id="input_name"></td>
+                        </tr>
+                        <tr>
+                            <td>url</td>
+                            <td><input id="input_url"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button id="button_add">추가</button>
+            </div>
+            <div id="div_item_list">
+                <div>
+                    <p>목록</p>
+                    <div id="div_list_frame">
+                        <!--동적 생성-->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="div_scroll" id="div_main">
+            <table id="table_post">
+                <thead>
+                    <tr>
+                        <th id="table_title">제목</th>
+                        <th id="table_author">작성자</th>
+                        <th id="table_date">작성일</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!--동적으로 tr,td 생성-->
+                    <!-- tr id="tr_content" -->
+                </tbody>
+            </table>
+        </div>
+        <div id="div_etc">
+            <div id="div_board_title">
+                <p></p>
+            </div>
+            <div id="div_page_num">
+                <!--동적으로 button 생성-->
+                <!-- button type="button" class="button_page" id="previous"or"next"or none-->
+            </div>
+            <div id="div_brand_name">
+                <p></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
