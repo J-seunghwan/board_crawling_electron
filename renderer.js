@@ -170,33 +170,33 @@ let state = {present_board:-1, board_info:0};
  * 3. main process로 첫번째 url의 글들 크롤링 시작 이벤트 발생
  */
 window.addEventListener("load", function(){
-    ipcRenderer.on("json-data",
-        /**
-         * 
-         * @param {Electron.IpcRendererEvent} event 
-         * @param {Object[]} args
-         * @param {String} args[].name
-         * @param {String} args[].order
-         * @param {String} args[].url
-         */
-        async (event, args)=>{
-            // 설정 페이지에 출력
-            state.board_info = args;
-
-            const div_list_frame = document.querySelector("#div_list_frame");
-            for(let i=0; i<state.board_info.length; i++){
-                let html_part = `
-                <div>
-                    <p>이름 <span>${state.board_info[i].name}</span></p>
-                    <p>utl <span>${state.board_info[i].url}</span></p>
-                </div>`;
-
-                div_list_frame.insertAdjacentHTML('beforeend', html_part);
-            }
-    })
-
     // puppeteer 작업 시작을 위한 이벤트 발생
     ipcRenderer.send("did-finish-init", "아무말");
+})
+
+ipcRenderer.on("json-data",
+    /**
+     * 
+     * @param {Electron.IpcRendererEvent} event 
+     * @param {Object[]} args
+     * @param {String} args[].name
+     * @param {String} args[].order
+     * @param {String} args[].url
+     */
+    async (event, args)=>{
+        const div_list_frame = document.querySelector("#div_list_frame");
+
+        // 설정 페이지에 출력
+        state.board_info = args;
+        for(let i=0; i<state.board_info.length; i++){
+            let html_part = `
+            <div>
+                <p>이름 <span>${state.board_info[i].name}</span></p>
+                <p>utl <span>${state.board_info[i].url}</span></p>
+            </div>`;
+
+            div_list_frame.insertAdjacentHTML('beforeend', html_part);
+        }
 })
 
 

@@ -1,6 +1,5 @@
 /* 색깔 참고 - 네이버 치지직 다크모드*/
 *{
-    padding: 0px;
     margin: 0px;
 }
 
@@ -18,7 +17,7 @@ a{
 }
 
 ::-webkit-scrollbar{
-    width:7px;
+    scrollbar-width: thin;
 }
 ::-webkit-scrollbar-thumb{
     /*스크롤바 뒷배경*/
@@ -202,23 +201,25 @@ a{
 }
 
 #div_item_list{
-    height:70%;
+    width: 700px;
+    margin: 0 auto;
 
-    > div{
-        width: 700px;
-        height: 100%;
-        margin: 0 auto;
-    }
-
-    p{
+    > p{
         color:#c9cedc;
+        padding-bottom: 20px;
     }
 }
 
 #div_list_frame{
-    overflow-y:scroll;
+    overflow: scroll;
+    white-space: nowrap;
+    height: 465px; /* 고정 높이 필수*/
 
     > div{
         margin-bottom:20px;
+    }
+
+    p{
+        color:#c9cedc;
     }
 }

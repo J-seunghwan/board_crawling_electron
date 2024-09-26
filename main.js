@@ -30,7 +30,7 @@ async function accessPage(url) {
     obj.pf = "cafe";
   }
   else if(url.includes("game.naver.com")){
-    await page.waitForSelector('#panelCenter > div > div.article_board_table_wrap__2X8Or > table > tbody > tr:nth-child(13) > td:nth-child(1) > div > a');
+    await page.waitForSelector('#panelCenter > div > div.article_board_table_wrap__2X8Or > table > tbody > tr:nth-child(1) > td:nth-child(1) > div > a');
     obj.pf = "game";
   }
 
@@ -149,8 +149,21 @@ async function getThumbImgSrc(page){
     e_handle = await page.$('#ia-info-data > ul > li:nth-child(1) > a > img');
   }
   else if(obj.pf == 'game'){
-    await page.waitForSelector("#lnb > div.header_wrap__2X1jy.header_bottom_gradient__aZsW5 > div > div.header_container-wrapper__area__36Ond > img");
-    e_handle = await page.$("#lnb > div.header_wrap__2X1jy.header_bottom_gradient__aZsW5 > div > div.header_container-wrapper__area__36Ond > img");
+    let typ = 1;
+    try{
+      await page.waitForSelector("#lnb > div.header_wrap__2X1jy.header_bottom_gradient__aZsW5 > div > div.header_container-wrapper__area__36Ond > img");
+    }catch(err){
+      await page.waitForSelector('#lnb > div.header_wrap__2X1jy > div > div.header_container-wrapper__area__36Ond > img');
+      typ = 2;
+    }
+    switch(typ){
+      case 1:
+        e_handle = await page.$("#lnb > div.header_wrap__2X1jy.header_bottom_gradient__aZsW5 > div > div.header_container-wrapper__area__36Ond > img");
+        break;
+      case 2:
+        e_handle = await page.$('#lnb > div.header_wrap__2X1jy > div > div.header_container-wrapper__area__36Ond > img');
+        break;
+    }
   }
 
   img_src = await e_handle.getProperty('src');
@@ -333,18 +346,7 @@ function createWindow (){
 
   // webContent 이벤트는 상위 흐름이 동기적이어야 동작함.
   // create window가 async이면 동작 안한다는 얘기.
-  /*
-  win.webContents.on('did-finish-load', (event) => {
-    console.log("==== event ==== did-finish-load");
-    win.webContents.send('json-data', obj.board_url);
-  });
 
-  win.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
-    console.log("==== event ==== did-fail-load");
-    console.error("Error code:", errorCode);
-    console.error('Failed to load file:', errorDescription);
-  });
-  */
   console.timeEnd("----time");
   console.log("done\n");
 }
@@ -399,16 +401,33 @@ ipcMain.on("did-finish-init", async(event, args) => {
   console.log("==== finish initialize electron ====");
   console.log("==== start crawling website thumbnail img src");
 
-  try{//dir /s \chrome.exe /b   childprocess exec
-    obj.browser = await puppeteer.launch({ headless: HEADLESS, executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe"});
+  try{
+    //dir /s \chrome.exe /b   childprocess exec
+    obj.browser = await puppeteer.launch({
+      headless: HEADLESS,
+      executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe",
+      args: ['--no-sandbox','--disable-setuid-sandbox']
+    });
   } catch(err){
     console.log("browser launch error");
     console.log(err);
-    return;
+
+    dialog.showMessageBoxSync(app.win, {
+      message: "chrome이 없거나 경로가 잘못됨",
+      button: ['ok']
+    }).then(result => {
+      if(result.response === 0){
+        console.log("ok clicked");
+        app.quit();
+      }
+    })
   }
 
   console.log("success assign broswer");
   console.log("browser info: ", obj.browser);
+  
+  
+  event.sender.send('json-data', obj.board_url);
 
   let res = [];
 
