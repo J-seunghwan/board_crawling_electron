@@ -164,16 +164,6 @@ function displayInfo(info){
 
 let state = {present_board:-1, board_info:0};
 
-/** 순서
- * 1. electron 첫 실행시 json파일에 저장된 데이터를 가지고 옴
- * 2. 데이터를 설정 페이지에 출력
- * 3. main process로 첫번째 url의 글들 크롤링 시작 이벤트 발생
- */
-window.addEventListener("load", function(){
-    // puppeteer 작업 시작을 위한 이벤트 발생
-    ipcRenderer.send("did-finish-init", "아무말");
-})
-
 ipcRenderer.on("json-data",
     /**
      * 
@@ -184,7 +174,28 @@ ipcRenderer.on("json-data",
      * @param {String} args[].url
      */
     async (event, args)=>{
-        const div_list_frame = document.querySelector("#div_list_frame");
+
+        // json 파일이 없거나 내용이 없을 때
+        if(args.length == 0){
+            const tbody = document.querySelector('#table_post > tbody');
+            tbody.insertAdjacentHTML('afterbegin',
+                `<tr id="tr_content">
+                    <td>설정에서 게시판을 추가해주세요</td>
+                </tr>`);
+            return;
+        }
+        args = args.sort((a,b) => a.order - b.order);//오름차순 정렬 - 혹시 몰라서 했음
+        state.present_board = 0;
+
+        // 게시판 버튼 생성
+        for(let i=0; i<args.length; i++){
+            createBoardButton(args[i]);
+
+            // 첫번째 게시판 활성 색깔 표시
+            if(i==0){
+                document.querySelector('#btn_0 > img').classList.add('thumbimg_on');
+            }
+        }
 
         // 설정 페이지에 출력
         state.board_info = args;
@@ -195,43 +206,13 @@ ipcRenderer.on("json-data",
                 <p>utl <span>${state.board_info[i].url}</span></p>
             </div>`;
 
-            div_list_frame.insertAdjacentHTML('beforeend', html_part);
+            document.querySelector("#div_list_frame").insertAdjacentHTML('beforeend', html_part);
         }
+
+        ipcRenderer.send("did-finish-init", "아무말");
 })
 
-
-// 우선 저장된 웹페이지들 대표 이미지로 버튼만들기
-// 이후 첫번째 게시판 정보 요청
-ipcRenderer.on('thumb-data',
-    /**
-     * 
-     * @param {Electron.IpcRendererEvent} event
-     * @param {Object[]} args
-     * @param {String} args.src
-     * @param {String} args.order
-     * @param {String} args.name
-     */
-    (event, args) => {
-        console.log("thumb data");
-        console.log(args);
-        args = args.sort((a,b) => a.order - b.order);//오름차순 정렬 - 혹시 몰라서 했음
-
-        state.present_board = 0;
-
-        // 현재 크롤링하고 있는 게시판 색깔 표시
-
-        for(let i=0; i<args.length; i++){
-            createBoardButton(args[i]);
-
-            // 게시판 첫번째 페이지 랜더링
-            if(i==0){
-                document.querySelector('#btn_0 > img').classList.add('thumbimg_on');
-            }
-        }
-        ipcRenderer.send("did-gen-board-btn", "아무말");
-})
-
-//게시판 정보 출력
+//게시판 글, 페이지 번호, 정보 출력
 ipcRenderer.on("page-info",
     /**
      * 
@@ -271,12 +252,11 @@ ipcRenderer.on("result-new-page",
 })
 
 let set_on = false;
-const button_set = document.getElementById("button_set");
 const div_set_frame = document.getElementById("div_set_frame");
 const div_main = document.getElementById("div_main");
 const div_etc = document.getElementById("div_etc");
 
-button_set.addEventListener("click", ()=>{
+document.getElementById("button_set").addEventListener("click", ()=>{
     if(set_on==false){//설정화면 보이기
         div_set_frame.style.display = "inline-block";
         div_main.style.display = "none";

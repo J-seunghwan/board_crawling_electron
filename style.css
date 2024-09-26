@@ -211,7 +211,7 @@ a{
 }
 
 #div_list_frame{
-    overflow: scroll;
+    overflow: auto;
     white-space: nowrap;
     height: 465px; /* 고정 높이 필수*/
 

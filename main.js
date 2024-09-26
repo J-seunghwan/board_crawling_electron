@@ -5,7 +5,9 @@ const fs = require('node:fs');
 const {shell} = require('electron');
 
 //headless : true = 브라우저 안보임, false = 브라우저 보임
-const HEADLESS = true;
+const HEADLESS = false;
+
+const FILE_NAME = "./board.json"
 
 /**
  * browser
@@ -13,11 +15,17 @@ const HEADLESS = true;
  *     close 시점 = app quit
  * pf---문자열
  *     게시판 플랫폼. 카페 또는 라운지(게임)
- * board_url---배열
- *     assign 시점 = createwindow read board.json file
+ * board_url -> json 배열
+ *     assign 시점 = createwindow()
  */
-let obj = { browser:0, pf:0, board_url:0};
+let obj = { browser:0, pf:0, board_url:[]};
 
+/**
+ * browser launch 이후 해당 url에 접속
+ * 플랫폼 인식
+ * @param {String} url 
+ * @returns 
+ */
 async function accessPage(url) {
   console.log("==== start create new page and access url: ", url);
 
@@ -33,6 +41,10 @@ async function accessPage(url) {
     await page.waitForSelector('#panelCenter > div > div.article_board_table_wrap__2X8Or > table > tbody > tr:nth-child(1) > td:nth-child(1) > div > a');
     obj.pf = "game";
   }
+  else{
+    console.log("wrong platform url", url);
+    throw new Error("WRONG_URL");
+  }
 
   console.log("== platform ==", obj.pf);
   console.log("done");
@@ -40,6 +52,11 @@ async function accessPage(url) {
   return page;
 }
 
+/**
+ * 해당 페이지에서 게시글 제목, 작성자, 작성일 크롤링
+ * @param {puppeteer.Page} page 
+ * @returns 
+ */
 async function getPostsData(page){
   console.log("==== start get post data");
   
@@ -56,6 +73,8 @@ async function getPostsData(page){
     // 제목, url
     e_handle = await iframe.$$('#main-area > div:nth-child(4) > table > tbody > tr > td.td_article > div.board-list > div > a.article');
 
+    if(e_handle.length == 0) throw new Error("CAFE_POSTDATA");
+    
     for (let element of e_handle){
       const title = await element.evaluate(e => e.textContent.trim().replace(/\s+/g,' '));
       const url = await element.evaluate(e => e.href);
@@ -85,6 +104,8 @@ async function getPostsData(page){
       가장 하위 a 태그 바로 위 div에 ::before가 있으면 공지글, 없으면 일반글
     */
     let e_handle_array = await page.$$('#panelCenter > div > div.article_board_table_wrap__2X8Or > table > tbody > tr > td:nth-child(1) > div');
+
+    if(e_handle_array.length == 0) throw new Error("GAME_POSTDATA");
 
     // ::before 유무 분류
     let start_normal = 0;
@@ -139,6 +160,11 @@ async function getPostsData(page){
   return result;
 }
 
+/**
+ * 해당 페이지의 대표 이미지 경로 크롤링
+ * @param {puppeteer.Page} page 
+ * @returns 
+ */
 async function getThumbImgSrc(page){
   console.log("==== start get thumbnail image src");
 
@@ -146,16 +172,27 @@ async function getThumbImgSrc(page){
   let e_handle;
   let img_src;
   if(obj.pf == 'cafe'){
-    e_handle = await page.$('#ia-info-data > ul > li:nth-child(1) > a > img');
+    try{
+      e_handle = await page.$('#ia-info-data > ul > li:nth-child(1) > a > img');
+    }catch(error){
+      throw new Error("CAFE_IMGSRC");
+    }
   }
   else if(obj.pf == 'game'){
     let typ = 1;
     try{
       await page.waitForSelector("#lnb > div.header_wrap__2X1jy.header_bottom_gradient__aZsW5 > div > div.header_container-wrapper__area__36Ond > img");
     }catch(err){
-      await page.waitForSelector('#lnb > div.header_wrap__2X1jy > div > div.header_container-wrapper__area__36Ond > img');
+      //치지직 라운지 때문
+      //page.url() 하면 현재 페이지의 url 알 수 있음
+      try{
+        await page.waitForSelector('#lnb > div.header_wrap__2X1jy > div > div.header_container-wrapper__area__36Ond > img');
+      }catch(err){
+        throw new Error("GAME_IMGSRC");
+      }
       typ = 2;
     }
+
     switch(typ){
       case 1:
         e_handle = await page.$("#lnb > div.header_wrap__2X1jy.header_bottom_gradient__aZsW5 > div > div.header_container-wrapper__area__36Ond > img");
@@ -169,6 +206,13 @@ async function getThumbImgSrc(page){
   img_src = await e_handle.getProperty('src');
   result = await img_src.jsonValue();
 
+  if(obj.pf == 'cafe'){
+    result = result.split("?")[0];
+  }
+  else if(obj.pf == 'game'){
+
+  }
+
   console.log("img src: ", result);
   console.log("done");
   return result;
@@ -176,8 +220,8 @@ async function getThumbImgSrc(page){
 
 /**
  * 해당 페이지 하단에 보여지는 페이지 번호 데이터 크롤링
- * @param {*} page 
- * @param {*} order 
+ * @param {puppeteer.Page} page 
+ * @param {Number} order 
  * @returns 
  */
 async function getPageNum(page, order){
@@ -241,7 +285,7 @@ async function getPageNum(page, order){
 
 /**
  * 해당 페이지의 게시판 이름과 브랜드 이름 크롤링
- * @param {*} page 
+ * @param {puppeteer.Page} page 
  * @returns 
  */
 async function getInfo(page){
@@ -265,6 +309,8 @@ async function getInfo(page){
   }
   else if(obj.pf == 'game'){
     let e_handle = await page.$('#lnb > div.header_wrap__2X1jy.header_bottom_gradient__aZsW5 > div > div.header_container-wrapper__area__36Ond > div > h2 > a');
+    //치지직...
+    if(e_handle == null) e_handle = await page.$('#lnb > div.header_wrap__2X1jy > div > div.header_container-wrapper__area__36Ond > div > h2 > a');
     const brand_name = await e_handle.evaluate(e => e.textContent.trim());
 
     e_handle = await page.$('#panelCenter > div > div.article_board_title_area__S_a6b > strong');
@@ -285,22 +331,30 @@ async function getInfo(page){
 
 /**
  * 게시판 번호(파라미터)를 받아서 해당 게시판 페이지에 접근해서 모든 정보를 크롤링
- * @param {*} _order 
+ * @param {Number} _order 
  * @returns 
  */
 async function getWebPageInfo(_order){
   _order = Number(_order);
   console.log("order:", _order);
   let result = {};
+  try{
   const page = await accessPage(obj.board_url[_order].url);
-
   result.info = await getInfo(page);
   result.page = await getPageNum(page, _order);
   result.post = await getPostsData(page);
+  }catch(error){
+    console.log("ERROR - get web page info");
+    console.log(error)
+  }
 
   return result;
 }
 
+/**
+ * 브라우저의 활성화 페이지 최소한으로 유지.
+ * black 페이지만 살아있도록 함.
+ */
 async function deletePage(){
   const pages = await obj.browser.pages();
   // log...
@@ -310,103 +364,16 @@ async function deletePage(){
   // log...
 }
 
-// 일렉트론 초기 첫 세팅
-// 이 과정에서 비동기 함수를 실행하면 원하는 동작을 만들 수 없음
-// 비동기(puppeteer)와 동기적 실행을 분리.
-// async createWindow를 하게 되면 BrowserWindow의 일부 함수가 동작하지 않고 다음으로 넘어감.
-function createWindow (){
-  console.time("----time");
-  console.log("==== start create electron window");
-
-  let  file_data;
-  // 파일 없으면 알려주기 위해 에러 발생
-  try{
-    file_data = fs.readFileSync('./board.json','utf8');
-  }catch(err){
-    console.error(err);
-    throw err;
-    return;
-  }
-  let json_data = JSON.parse(file_data);
-
-  console.log("json data length:", json_data.length);
-  obj.board_url = json_data;
-
-  const win = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    webPreferences: {
-      preload: path.join(path.resolve(), 'preload.js'),
-      nodeIntegration: true,
-      contextIsolation: false,
-    }
-  })
-
-  win.loadFile('index.html');
-
-  // webContent 이벤트는 상위 흐름이 동기적이어야 동작함.
-  // create window가 async이면 동작 안한다는 얘기.
-
-  console.timeEnd("----time");
-  console.log("done\n");
-}
-
-app.whenReady().then(() => {
-  // json 파일이 없을 때 알려주고 앱 종료
-  try{
-    createWindow();
-  }catch(err){
-    dialog.showMessageBoxSync(app.win, {
-      message: "json file이 없음",
-      button: ['ok']
-    }).then(result => {
-      if(result.response === 0){
-        console.log("ok clicked");
-        app.quit();
-      }
-    })
-  }
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      try{
-        createWindow();
-      }catch(err){
-        dialog.showMessageBoxSync(app.win, {
-          message: "json file이 없음",
-          button: ['ok']
-        }).then(result => {
-          if(result.response === 0){
-            console.log("ok clicked");
-            app.quit();
-          }
-        })
-      }
-    }
-  })
-})
-
-app.on('window-all-closed', async() => {
-  if (process.platform !== 'darwin') {
-    await obj.browser.close();
-    app.quit();
-  }
-})
-
-//어떻게 해도 비동기 함수를 동기적 흐름으로 만들 수 없음
-//따라서 createwindow와 같은 초기 프로그램 세팅 되는 과정에서 비동기적 흐름을 제어해서 동기적으로 만드는 것은 불가능 하다고 판단
-//프로그램이 준비가 안료된 후 render -> main으로 이벤트를 발생시켜 강제로 비동기적 흐름으로 프로그램 제어
-ipcMain.on("did-finish-init", async(event, args) => {
-  console.time("----time");
-  console.log("==== finish initialize electron ====");
-  console.log("==== start crawling website thumbnail img src");
-
+/**
+ * 브라우저 실행
+ */
+async function launchBrowser() {
   try{
     //dir /s \chrome.exe /b   childprocess exec
     obj.browser = await puppeteer.launch({
       headless: HEADLESS,
       executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe",
-      args: ['--no-sandbox','--disable-setuid-sandbox']
+      userDataDir: "C:/Project/puppeteer profile"
     });
   } catch(err){
     console.log("browser launch error");
@@ -425,49 +392,83 @@ ipcMain.on("did-finish-init", async(event, args) => {
 
   console.log("success assign broswer");
   console.log("browser info: ", obj.browser);
-  
-  
-  event.sender.send('json-data', obj.board_url);
+}
 
-  let res = [];
+// 일렉트론 초기 첫 세팅
+// 이 과정에서 비동기 함수를 실행하면 원하는 동작을 만들 수 없음
+// 비동기(puppeteer)와 동기적 실행을 분리.
+// async createWindow를 하게 되면 BrowserWindow의 일부 함수가 동작하지 않고 다음으로 넘어감.
+function createWindow (){
+  console.time("----time");
+  console.log("==== start create electron window");
 
-  //저장된 모든 웹페이지에 접근해서 대표 이미지 가져오기
-  for(let i=0; i<obj.board_url.length; i++){
-    const page = await accessPage(obj.board_url[i].url);
-
-    const img_src = await getThumbImgSrc(page);
-    const _order = obj.board_url[i].order;
-    const name = obj.board_url[i].name;
-
-    res.push({
-      src: img_src,
-      order: _order,
-      name: name
-    })
-    console.timeLog("----time");
+  let file_exist = true;
+  try{
+    fs.accessSync(FILE_NAME, fs.constants.F_OK);
+  }catch(error){
+    console.log("file no exist");
+    file_exist = false;
   }
 
-  await deletePage();
+  if(file_exist){
+    const file_data = fs.readFileSync(FILE_NAME,'utf8');
+    let json_data = JSON.parse(file_data);
+    obj.board_url = json_data;
 
-  event.reply("thumb-data", res);
+    console.log("json data length:", obj.board_url.length);
+  }
+
+  const win = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    webPreferences: {
+      preload: path.join(path.resolve(), 'preload.js'),
+      nodeIntegration: true,
+      contextIsolation: false,
+    }
+  })
+
+  win.loadFile('index.html');
+
+  // webContent 이벤트는 상위 흐름이 동기적이어야 동작함.
+  // create window가 async이면 동작 안한다는 얘기.
+  win.webContents.on('did-finish-load',(event) => {
+    win.webContents.send("json-data", obj.board_url);
+  })
+
   console.timeEnd("----time");
   console.log("done\n");
+}
+
+app.whenReady().then(() => {
+  createWindow();
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  })
 })
 
-// 썸네일 버튼 렌더링 완료
-// 첫번째 웹페이지 크롤링 및 데이터 전송
-// 응답 전송 channel - "page-info"
-ipcMain.on("did-gen-board-btn", async (event, args)=>{
-  console.time("----time");
-  console.log("==== finish generate button. start first webpage crawling");
+app.on('window-all-closed', async() => {
+  if (process.platform !== 'darwin') {
+    if(obj.browser != 0) await obj.browser.close();
+    app.quit();
+  }
+})
 
-  // 저장된 첫번째 웹페이지 데이터 크롤링
-  let result = await getWebPageInfo(0);
-  result.present_page = 1;
-  await deletePage();
+// 프로그램이 준비가 안료된 후 render -> main으로 이벤트를 발생시켜 puppeteer 시작
+ipcMain.on("did-finish-init", async(event, args) => {
+  console.time("----time");
+  console.log("==== finish initialize electron ====");
+  console.log("==== start crawling website thumbnail img src");
   
-  //게시판 글 목록 데이터 전송
+  if(obj.browser == 0) await launchBrowser();
+
+  const result = await getWebPageInfo(0);
+
   event.reply("page-info", result);
+
   console.timeEnd("----time");
   console.log("done\n");
 })
@@ -480,16 +481,14 @@ ipcMain.on("load-new-page", async (event, args) => {
 
   const [num, page_url, board_order] = args;
   console.log("request num:",num, " url: ",page_url," board-order: ", board_order);
-  const page = await accessPage(page_url);
-  let result = {};
 
+  let result = {};
   //크롤링
+  const page = await accessPage(page_url);
   result.page = await getPageNum(page, board_order);
   result.post = await getPostsData(page);
 
-  // page=** => page, **
   const page_num = /page=[0-9]{1,2}/g.exec(page_url)[0].split("=")[1];
-  
   result.present_page = page_num;
 
   await deletePage();
@@ -523,25 +522,44 @@ ipcMain.on("new-window", (event, args)=>{
   console.log("done\n");
 })
 
-var new_count = 0;
-ipcMain.on("add-board", (event, args)=>{
+// 추가한 url에 접속해서 대표이미지 경로 가져오기 및 json 파일 저장
+ipcMain.on("add-board", async(event, args)=>{
   console.log("add new board information");
-  
+
+  if(obj.browser == 0) await launchBrowser();
+
+  let img_src;
+  try{
+    const page = await accessPage(args.url);
+    img_src = await getThumbImgSrc(page);
+    await getPostsData(page);
+  }catch(error){
+    console.log("getThnmbImgSrc error");
+    console.log(error);
+
+    dialog.showMessageBoxSync(app.win, {
+      message: `잘못된 url입니다. ${error}`,
+      button: ['ok']
+    });
+    
+    return;
+  }
+
   obj.board_url.push({
     name: args.name,
-    order: String(obj.board_url.length + new_count),
-    url: args.url
+    order: obj.board_url.length,
+    url: args.url,
+    src: img_src
   })
 
   const data = JSON.stringify(obj.board_url, null, "\t");
 
-  fs.writeFile('./board.json', data, err => {
+  fs.writeFile(FILE_NAME, data, err => {
     if (err) {
       console.error(err);
     }
   });
 
-  new_count += 1;
   dialog.showMessageBoxSync(app.win, {
     message: "프로그램을 재시작해야 합니다.",
     button: ['ok']
@@ -553,15 +571,8 @@ ipcMain.on("add-board", (event, args)=>{
 2. render는 데이터 받아서 단순 렌더링
 
 //  -- ipc data format
-// 게시판 버튼 생성용
-[
-    {
-      name:"~~~", // 내가 정한 게시판 이름
-      order:"~~~", // 순서
-      src:"~~" // 이미지 주소
-    },
-    ...
-]
+// 게시판 버튼 생성용 데이터
+//     json 파일 데이터 그대로 사용
 
 // 크롤링 데이터
 {
