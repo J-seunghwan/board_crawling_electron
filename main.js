@@ -373,7 +373,7 @@ async function launchBrowser() {
     obj.browser = await puppeteer.launch({
       headless: HEADLESS,
       executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe",
-      userDataDir: "C:/Project/puppeteer profile"
+      userDataDir: "./User Data"
     });
   } catch(err){
     console.log("browser launch error");
