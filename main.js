@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const {shell} = require('electron');
 
 //headless : true = 브라우저 안보임, false = 브라우저 보임
-const HEADLESS = false;
+const HEADLESS = true;
 
 const FILE_NAME = "./board.json"
 
@@ -368,12 +368,16 @@ async function deletePage(){
  * 브라우저 실행
  */
 async function launchBrowser() {
+  let args_option = '';
+  if(HEADLESS == true) args_option = "--headless=old";
+  
   try{
     //dir /s \chrome.exe /b   childprocess exec
     obj.browser = await puppeteer.launch({
       headless: HEADLESS,
       executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe",
-      userDataDir: "./User Data"
+      userDataDir: "./User Data",
+      args:[args_option]
     });
   } catch(err){
     console.log("browser launch error");
